@@ -8,8 +8,10 @@ const axios = require('axios');
 const cookieParser = require('cookie');
 const socket = require('socket.io');
 const app = express();
+const jwt = require('jsonwebtoken');
 
-const {JackpotController} = require('./controllers');
+const cookies = require('./const/cookies');
+const {JackpotController, WalletController} = require('./controllers');
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -85,8 +87,22 @@ io.of('/lobby').on('connection',(socket)=>{
                 callback({data:0});
             }
         });
-        socket.on('/update-player', (arg, callback)=>{
 
+        socket.on('/update-player', async (arg, callback)=>{
+            try {
+                let decode = jwt.decode(parsed[cookies.player_token]);
+                if(decode){
+                    let {user_id} = decode;
+                    if(user_id){
+                        let wallet = await WalletController.get(user_id);
+                        if(wallet.status){
+                            callback({data:wallet.data.data.balance});
+                        }
+                    };
+                };
+            } catch(err){
+                console.log(100,err);
+            };
         });
 
         socket.on('disconnect',function(){

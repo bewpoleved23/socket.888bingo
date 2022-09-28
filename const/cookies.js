@@ -1,0 +1,1 @@
+exports.player_token = 'x-pt_token';
